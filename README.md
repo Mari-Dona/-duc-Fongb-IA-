@@ -1,4 +1,5 @@
 # 🇧🇯 Éduc Fongbé IA
+(facebook_01.jpg)
 
 > **Projet soumis pour le concours : #ProposeTaMeilleureCréationAvecLIA**
 
