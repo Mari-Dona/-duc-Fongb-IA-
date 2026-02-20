@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Éduc Fongbé IA — Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --violet:#7C3AED;--violet-light:#A78BFA;--pink:#EC4899;
+    --gold:#F59E0B;--green:#10B981;--dark:#1E1B4B;--bg:#F5F3FF;--gray:#6B7280;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#C4B5FD,#E9D5FF,#FBCFE8);display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px;}
+  .phone-shell{width:390px;height:844px;background:#1a1a2e;border-radius:50px;padding:12px;box-shadow:0 0 0 1px #333,0 30px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.1);position:relative;}
+  .phone-inner{width:100%;height:100%;border-radius:40px;overflow:hidden;background:var(--bg);position:relative;}
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:30px;background:#1a1a2e;border-radius:0 0 20px 20px;z-index:100;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .notch-cam{width:10px;height:10px;background:#333;border-radius:50%;}
+  .notch-mic{width:30px;height:5px;background:#333;border-radius:3px;}
+  .screen{position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column;scrollbar-width:none;}
+  .screen::-webkit-scrollbar{display:none;}
+  .screen.active{display:flex;}
+
+  /* SPLASH */
+  #splash{background:var(--dark);align-items:center;justify-content:center;gap:16px;padding:40px 24px;}
+  .splash-circle{position:absolute;border-radius:50%;opacity:0.12;animation:float 6s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-18px) scale(1.04)}}
+  .splash-logo{width:88px;height:88px;background:linear-gradient(135deg,var(--violet),var(--pink));border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 20px 40px rgba(124,58,237,0.4);z-index:1;animation:pulseLogo 3s ease-in-out infinite;}
+  @keyframes pulseLogo{0%,100%{box-shadow:0 20px 40px rgba(124,58,237,0.4)}50%{box-shadow:0 20px 60px rgba(236,72,153,0.6)}}
+  .splash-title{font-family:'Sora',sans-serif;font-size:28px;font-weight:800;color:white;text-align:center;z-index:1;}
+  .splash-title span{color:var(--pink);}
+  .splash-sub{font-size:13px;color:var(--violet-light);text-align:center;line-height:1.6;z-index:1;}
+  .splash-fon{background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.4);border-radius:16px;padding:14px 20px;text-align:center;z-index:1;width:100%;}
+  .splash-fon-word{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:var(--gold);letter-spacing:0.5px;}
+  .splash-fon-trad{font-size:12px;color:var(--violet-light);margin-top:4px;}
+  .splash-btn{padding:16px 48px;background:linear-gradient(135deg,var(--violet),var(--pink));color:white;border:none;border-radius:50px;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;z-index:1;box-shadow:0 10px 30px rgba(124,58,237,0.5);transition:transform 0.15s;}
+  .splash-btn:active{transform:scale(0.95);}
+  .splash-tags{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;z-index:1;}
+  .splash-tag{padding:5px 12px;background:rgba(124,58,237,0.3);border:1px solid rgba(124,58,237,0.5);border-radius:20px;font-size:11px;color:var(--violet-light);}
+
+  /* ONBOARDING */
+  #onboard{background:white;padding:50px 24px 30px;}
+  .onemoji{font-size:56px;margin-bottom:12px;display:block;text-align:center;}
+  .ontitle{font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--dark);margin-bottom:8px;text-align:center;}
+  .onsub{font-size:13px;color:var(--gray);line-height:1.5;text-align:center;margin-bottom:22px;}
+  .plabel{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:10px;}
+  .pcards{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+  .pcard{padding:14px 16px;border:2px solid #E5E7EB;border-radius:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s;background:#FAFAFA;}
+  .pcard:active{transform:scale(0.98);}
+  .pcard.sel{border-color:var(--violet);background:#F5F3FF;box-shadow:0 0 0 4px rgba(124,58,237,0.1);}
+  .picon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .pv{background:#F5F3FF;}.pp{background:#FDF2F8;}.pg{background:#FFFBEB;}
+  .pname{font-weight:700;font-size:14px;color:var(--dark);}
+  .pdesc{font-size:12px;color:var(--gray);margin-top:2px;}
+  .chk{width:22px;height:22px;border-radius:50%;border:2px solid #E5E7EB;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;flex-shrink:0;transition:all 0.2s;}
+  .pcard.sel .chk{background:var(--violet);border-color:var(--violet);color:white;}
+  .onbtn{width:100%;padding:16px;background:linear-gradient(135deg,var(--violet),var(--pink));color:white;border:none;border-radius:16px;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:auto;box-shadow:0 8px 20px rgba(124,58,237,0.4);transition:transform 0.15s;}
+  .onbtn:active{transform:scale(0.98);}
+
+  /* HOME */
+  #home{background:var(--bg);padding-bottom:90px;}
+  .hdr{background:linear-gradient(135deg,var(--dark),#6B21A8);padding:50px 24px 24px;border-radius:0 0 32px 32px;position:relative;overflow:hidden;}
+  .hdr::after{content:'🎓';position:absolute;right:20px;bottom:-10px;font-size:80px;opacity:0.12;}
+  .hgreet{font-size:13px;color:var(--violet-light);margin-bottom:4px;}
+  .hname{font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:white;}
+  .hstreak{margin-top:14px;background:rgba(255,255,255,0.1);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;}
+  .snum{font-family:'Sora',sans-serif;font-weight:800;color:var(--gold);font-size:18px;}
+  .wod{margin:16px 24px 0;background:linear-gradient(135deg,var(--violet),var(--pink));border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 8px 20px rgba(124,58,237,0.35);transition:transform 0.15s;}
+  .wod:active{transform:scale(0.98);}
+  .wodw{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:white;}
+  .wodt{font-size:12px;color:rgba(255,255,255,0.8);margin-top:3px;}
+  .hsec{padding:18px 24px 0;}
+  .stitle{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:var(--dark);margin-bottom:12px;}
+  .prgcard{background:white;border-radius:20px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,0.06);margin-bottom:18px;}
+  .prgtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .prglbl{font-size:12px;color:var(--gray);}
+  .prgpct{font-family:'Sora',sans-serif;font-weight:800;color:var(--violet);}
+  .prgbar{height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;}
+  .prgfill{height:100%;background:linear-gradient(90deg,var(--violet),var(--pink));border-radius:4px;}
+  .prgsteps{display:flex;justify-content:space-between;margin-top:10px;}
+  .sdot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+  .sdot.dn{background:var(--violet);color:white;}.sdot.cu{background:var(--pink);color:white;box-shadow:0 0 0 4px rgba(236,72,153,0.2);}.sdot.nx{background:#E5E7EB;color:var(--gray);}
+  .lscroll{display:flex;gap:12px;overflow-x:auto;overflow-y:visible;padding:4px 24px 12px;scrollbar-width:none;min-height:160px;}
+  .lscroll::-webkit-scrollbar{display:none;}
+  .lcard{min-width:148px;height:148px;border-radius:20px;padding:16px;cursor:pointer;transition:transform 0.15s;flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,0.15);display:flex;flex-direction:column;justify-content:flex-start;}
+  .lcard:active{transform:scale(0.96);}
+  .lv{background:linear-gradient(135deg,#7C3AED,#6B21A8);}.lp{background:linear-gradient(135deg,#EC4899,#BE185D);}.lg{background:linear-gradient(135deg,#F59E0B,#D97706);}.lgr{background:linear-gradient(135deg,#10B981,#059669);}
+  .lemo{font-size:28px;margin-bottom:8px;display:block;}
+  .lname{font-weight:700;font-size:13px;color:white;margin-bottom:2px;}
+  .lsub{font-size:11px;color:rgba(255,255,255,0.7);}
+  .lbdg{display:inline-block;margin-top:auto;padding:3px 8px;background:rgba(255,255,255,0.2);border-radius:8px;font-size:10px;color:white;}
+  .prcard{background:white;border-radius:20px;padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,0.06);display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform 0.15s;margin-bottom:10px;}
+  .prcard:active{transform:scale(0.98);}
+  .pricon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;}
+  .piv{background:#F5F3FF;}.pip{background:#FDF2F8;}
+  .prname{font-weight:700;font-size:14px;color:var(--dark);}
+  .prsub{font-size:12px;color:var(--gray);margin-top:2px;}
+  .procard{margin:0 24px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:20px;padding:16px;}
+  .prolbl{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
+  .protxt{font-family:'Sora',sans-serif;font-size:14px;color:var(--dark);font-style:italic;line-height:1.5;}
+  .protrad{font-size:12px;color:var(--gray);margin-top:6px;}
+
+  /* LESSON */
+  #lesson{background:var(--dark);padding-bottom:20px;}
+  .lhdr{padding:50px 24px 14px;display:flex;align-items:center;gap:12px;}
+  .backbtn{width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:12px;border:none;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .lhtitle{font-family:'Sora',sans-serif;font-weight:700;color:white;font-size:15px;}
+  .lhsub{font-size:11px;color:var(--violet-light);}
+  .lpbar{height:4px;background:rgba(255,255,255,0.1);margin:0 24px;}
+  .lpfill{height:100%;background:linear-gradient(90deg,var(--violet),var(--pink));border-radius:2px;transition:width 0.5s;}
+  .ltabs{display:flex;gap:8px;padding:12px 24px;overflow-x:auto;scrollbar-width:none;}
+  .ltabs::-webkit-scrollbar{display:none;}
+  .ltab{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.45);cursor:pointer;white-space:nowrap;transition:all 0.2s;flex-shrink:0;}
+  .ltab.active{background:var(--violet);border-color:var(--violet);color:white;}
+  .acard{margin:0 24px 14px;background:linear-gradient(135deg,rgba(124,58,237,0.22),rgba(236,72,153,0.14));border:1px solid rgba(124,58,237,0.28);border-radius:24px;padding:22px;text-align:center;}
+  .afon{font-family:'Sora',sans-serif;font-size:30px;font-weight:800;color:white;margin-bottom:4px;letter-spacing:0.5px;}
+  .aphon{font-size:13px;color:var(--violet-light);margin-bottom:16px;font-style:italic;}
+  .aplay{width:60px;height:60px;background:linear-gradient(135deg,var(--violet),var(--pink));border-radius:50%;border:none;color:white;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 10px 25px rgba(124,58,237,0.5);transition:transform 0.15s;}
+  .aplay:active{transform:scale(0.9);}
+  .aplay.playing{animation:pulsePlay 1s ease-in-out infinite;}
+  @keyframes pulsePlay{0%,100%{box-shadow:0 10px 25px rgba(124,58,237,0.5)}50%{box-shadow:0 10px 40px rgba(236,72,153,0.8),0 0 0 12px rgba(236,72,153,0.1)}}
+  .atrad{margin-top:14px;font-size:13px;color:rgba(255,255,255,0.6);}
+  .atrad strong{color:white;font-size:16px;}
+  .anote{font-size:11px;color:rgba(255,255,255,0.3);margin-top:8px;}
+  .toncard{margin:0 24px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:14px 16px;}
+  .tontitle{font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+  .tonrow{display:flex;gap:8px;flex-wrap:wrap;}
+  .tonbdg{padding:6px 12px;border-radius:10px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
+  .tb{background:rgba(124,58,237,0.25);color:#C4B5FD;}.th{background:rgba(236,72,153,0.25);color:#FBCFE8;}.tm{background:rgba(245,158,11,0.2);color:#FDE68A;}
+  .minirow{padding:0 24px 14px;display:flex;flex-direction:column;gap:10px;}
+  .minicard{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;}
+  .mplay{width:40px;height:40px;background:linear-gradient(135deg,var(--violet),var(--pink));border-radius:50%;border:none;color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(124,58,237,0.4);}
+  .mfon{font-family:'Sora',sans-serif;font-size:17px;font-weight:800;color:white;}
+  .mtrad{font-size:12px;color:var(--violet-light);margin-top:2px;}
+  .dictable{padding:0 24px 14px;}
+  .dicrow{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .dicrow:last-child{border-bottom:none;}
+  .dicfon{font-family:'Sora',sans-serif;font-size:16px;font-weight:800;color:white;}
+  .dictr{font-size:13px;color:var(--violet-light);}
+  .qcard{margin:0 24px;}
+  .qqst{font-size:15px;color:rgba(255,255,255,0.9);margin-bottom:14px;font-weight:600;line-height:1.5;}
+  .qopts{display:flex;flex-direction:column;gap:10px;}
+  .qopt{padding:14px 16px;background:rgba(255,255,255,0.07);border:2px solid rgba(255,255,255,0.1);border-radius:14px;color:white;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:10px;font-family:'Nunito',sans-serif;}
+  .qopt:active{transform:scale(0.98);}
+  .qopt.correct{background:rgba(16,185,129,0.2);border-color:var(--green);color:#6EE7B7;}
+  .qopt.wrong{background:rgba(239,68,68,0.2);border-color:#EF4444;color:#FCA5A5;}
+  .qltr{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+  .nxtbtn{margin:16px 24px 0;width:calc(100% - 48px);padding:16px;background:linear-gradient(135deg,var(--violet),var(--pink));color:white;border:none;border-radius:16px;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;display:none;box-shadow:0 8px 20px rgba(124,58,237,0.4);transition:transform 0.15s;}
+  .nxtbtn:active{transform:scale(0.98);}
+
+  /* SUCCESS */
+  #success{background:var(--dark);align-items:center;justify-content:center;text-align:center;padding:36px 28px;gap:14px;}
+  .sucemo{font-size:76px;animation:bounceIn 0.6s cubic-bezier(0.175,0.885,0.32,1.275);}
+  @keyframes bounceIn{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .suctitle{font-family:'Sora',sans-serif;font-size:28px;font-weight:800;color:white;}
+  .sucfon{font-size:13px;color:var(--gold);font-style:italic;font-weight:700;}
+  .sucsub{font-size:13px;color:var(--violet-light);line-height:1.6;}
+  .sucword{background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.4);border-radius:16px;padding:14px 20px;width:100%;}
+  .sucwlbl{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:4px;}
+  .sucwfon{font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:white;}
+  .sucwtrad{font-size:12px;color:var(--violet-light);margin-top:4px;}
+  .xpbdg{background:linear-gradient(135deg,var(--gold),#D97706);border-radius:20px;padding:14px 28px;font-family:'Sora',sans-serif;font-size:20px;font-weight:800;color:white;box-shadow:0 10px 25px rgba(245,158,11,0.4);}
+  .sucstats{display:flex;gap:12px;}
+  .sstat{background:rgba(255,255,255,0.07);border-radius:16px;padding:12px 18px;text-align:center;}
+  .snum2{font-family:'Sora',sans-serif;font-size:22px;font-weight:800;color:var(--pink);}
+  .slbl{font-size:11px;color:var(--violet-light);margin-top:2px;}
+  .sucbtn{width:100%;padding:16px;background:linear-gradient(135deg,var(--violet),var(--pink));color:white;border:none;border-radius:16px;font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 8px 20px rgba(124,58,237,0.4);}
+  .sucbtn:active{transform:scale(0.98);}
+
+  .bnav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:366px;background:white;border-radius:30px;padding:12px 20px;display:flex;justify-content:space-around;box-shadow:0 -4px 30px rgba(0,0,0,0.1);z-index:50;}
+  .nitem{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 10px;border-radius:16px;transition:all 0.2s;}
+  .nitem.active{background:#F5F3FF;}
+  .nemo{font-size:20px;}.nlbl{font-size:10px;font-weight:600;color:var(--gray);}
+  .nitem.active .nlbl{color:var(--violet);}
+
+  .slide-in{animation:slideIn 0.28s ease;}
+  @keyframes slideIn{from{transform:translateX(26px);opacity:0}to{transform:translateX(0);opacity:1}}
+  .phone-label{text-align:center;margin-top:14px;font-family:'Sora',sans-serif;font-size:12px;color:#7C3AED;font-weight:600;letter-spacing:0.4px;}
+
+  @media(max-width:430px){.phone-shell{width:100%;height:auto;border-radius:0;padding:0;}.phone-inner{border-radius:0;height:100vh;}.bnav{width:calc(100% - 24px);}}
+</style>
+</head>
+<body>
+<div>
+<div class="phone-shell">
+  <div class="notch"><div class="notch-cam"></div><div class="notch-mic"></div></div>
+  <div class="phone-inner">
+
+    <!-- SPLASH -->
+    <div class="screen active" id="splash">
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none;">
+        <div class="splash-circle" style="width:200px;height:200px;background:var(--violet);top:-60px;left:-60px;"></div>
+        <div class="splash-circle" style="width:150px;height:150px;background:var(--pink);bottom:80px;right:-40px;animation-delay:2s;"></div>
+        <div class="splash-circle" style="width:100px;height:100px;background:var(--gold);top:40%;left:60%;animation-delay:4s;"></div>
+      </div>
+      <div class="splash-logo">🎓</div>
+      <div class="splash-title">Éduc <span>Fongbé</span> IA</div>
+      <div class="splash-sub">Apprendre en langue maternelle<br>grâce à l'Intelligence Artificielle</div>
+      <div class="splash-fon">
+        <div class="splash-fon-word">Mí wá kplɔ́n Fɔ̀ngbè !</div>
+        <div class="splash-fon-trad">« Venons apprendre le Fongbé ! »</div>
+      </div>
+      <!-- Bouton musique -->
+      <div id="music-btn" onclick="toggleMusic()" style="z-index:2;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:30px;padding:8px 16px;cursor:pointer;transition:all 0.2s;">
+        <span id="music-icon" style="font-size:18px;">🎵</span>
+        <span style="font-size:12px;color:rgba(255,255,255,0.7);font-weight:600;" id="music-label">Activer la musique</span>
+      </div>
+      <button class="splash-btn" onclick="goTo('onboard')">Commencer →</button>
+      <!-- Crédit S.A.D.M -->
+      <div style="z-index:1;text-align:center;">
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:3px;">Réalisé par</div>
+        <div style="font-family:'Sora',sans-serif;font-size:14px;font-weight:800;color:rgba(255,255,255,0.75);letter-spacing:2px;">S.A.D.M</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;">Prototype · SAFEN 2026</div>
+      </div>
+    </div>
+
+    <!-- ONBOARDING -->
+    <div class="screen" id="onboard">
+      <span class="onemoji">👋</span>
+      <div class="ontitle">Bienvenue !</div>
+      <div class="onsub">Choisissez votre profil pour que l'IA adapte votre parcours d'apprentissage en Fongbé.</div>
+      <div class="plabel">Qui êtes-vous ?</div>
+      <div class="pcards">
+        <div class="pcard" onclick="selectProfile(this,'Amina')">
+          <div class="picon pv">🧒</div>
+          <div><div class="pname">Enfant (6–12 ans)</div><div class="pdesc">Jeux, contes et chansons en Fongbé</div></div>
+          <div class="chk">✓</div>
+        </div>
+        <div class="pcard" onclick="selectProfile(this,'Kossivi')">
+          <div class="picon pp">🎒</div>
+          <div><div class="pname">Collégien(ne) (12–16 ans)</div><div class="pdesc">Révisions scolaires en Fongbé</div></div>
+          <div class="chk">✓</div>
+        </div>
+        <div class="pcard" onclick="selectProfile(this,'Adjoua')">
+          <div class="picon pg">👩</div>
+          <div><div class="pname">Femme adulte</div><div class="pdesc">Alphabétisation et vie quotidienne</div></div>
+          <div class="chk">✓</div>
+        </div>
+      </div>
+      <button class="onbtn" id="onbtn" onclick="goTo('home')" style="opacity:0.4;pointer-events:none;">Démarrer mon parcours →</button>
+    </div>
+
+    <!-- HOME -->
+    <div class="screen" id="home">
+      <div class="hdr">
+        <div class="hgreet">Kúnnuɖetɔ́ 👋</div>
+        <div class="hname" id="uname">Adjoua</div>
+        <div class="hstreak">
+          <span style="font-size:20px;">🔥</span>
+          <div><div style="font-size:13px;color:rgba(255,255,255,0.8);">Série en cours</div><div class="snum">3 jours consécutifs !</div></div>
+        </div>
+      </div>
+
+      <!-- Mot du jour basé sur source réelle -->
+      <div class="wod" onclick="goTo('lesson')">
+        <span style="font-size:30px;flex-shrink:0;">⭐</span>
+        <div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:2px;">Mot du jour</div>
+          <div class="wodw">Àwànù</div>
+          <div class="wodt">Merci / Merci beaucoup (kaka)</div>
+        </div>
+        <div style="margin-left:auto;font-size:20px;color:rgba(255,255,255,0.6);">›</div>
+      </div>
+
+      <div class="hsec">
+        <div class="stitle">📈 Votre progression</div>
+        <div class="prgcard">
+          <div class="prgtop"><span class="prglbl">Module 1 · Kúnnuɖetɔ́ (Salutations)</span><span class="prgpct">40%</span></div>
+          <div class="prgbar"><div class="prgfill" style="width:40%"></div></div>
+          <div class="prgsteps">
+            <div class="sdot dn">1</div><div class="sdot dn">2</div><div class="sdot cu">3</div><div class="sdot nx">4</div><div class="sdot nx">5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stitle" style="padding:0 24px;margin-bottom:12px;">📚 Modules</div>
+      <div class="lscroll" style="padding-bottom:12px;">
+        <div class="lcard lv" onclick="goTo('lesson')">
+          <span class="lemo">👋</span>
+          <div class="lname">Kúnnuɖetɔ́</div>
+          <div class="lsub">Salutations · 8 leçons</div>
+          <span class="lbdg">En cours</span>
+        </div>
+        <div class="lcard lp">
+          <span class="lemo">🔢</span>
+          <div class="lname">Xwetɛ́</div>
+          <div class="lsub">Nombres · 10 leçons</div>
+          <span class="lbdg">🔒 Bientôt</span>
+        </div>
+        <div class="lcard lg">
+          <span class="lemo">👪</span>
+          <div class="lname">Hagbè</div>
+          <div class="lsub">Famille · 7 leçons</div>
+          <span class="lbdg">🔒 Bientôt</span>
+        </div>
+        <div class="lcard lgr">
+          <span class="lemo">🌳</span>
+          <div class="lname">Gbɔganu</div>
+          <div class="lsub">Nature · 6 leçons</div>
+          <span class="lbdg">🔒 Bientôt</span>
+        </div>
+      </div>
+
+      <div class="hsec">
+        <div class="stitle">⚡ Pratique rapide</div>
+        <div class="prcard" onclick="goTo('lesson')">
+          <div class="pricon piv">🎧</div>
+          <div><div class="prname">Écoute & Répète</div><div class="prsub">Prononciation Fongbé · 5 min</div></div>
+          <div style="color:var(--gray);font-size:20px;margin-left:auto;">›</div>
+        </div>
+        <div class="prcard" onclick="goTo('lesson')">
+          <div class="pricon pip">❓</div>
+          <div><div class="prname">Quiz IA du jour</div><div class="prsub">Généré automatiquement · 3 questions</div></div>
+          <div style="color:var(--gray);font-size:20px;margin-left:auto;">›</div>
+        </div>
+      </div>
+
+      <!-- Proverbe authentique Fon -->
+      <div class="hsec" style="padding-bottom:20px;">
+        <div class="stitle">🌟 Proverbe du jour</div>
+        <div class="procard">
+          <div class="prolbl">📖 Proverbe Fɔ̀ngbè</div>
+          <div class="protxt">« Nyi mɛ mɔ zǎn ɔ, nyí mɛ mɔ hwenu. »</div>
+          <div class="protrad">🇫🇷 « Celui qui gaspille le jour gaspille le temps. »</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LESSON -->
+    <div class="screen" id="lesson">
+      <div class="lhdr">
+        <button class="backbtn" onclick="goTo('home')">‹</button>
+        <div>
+          <div class="lhtitle">Kúnnuɖetɔ́ · Leçon 3 / 8</div>
+          <div class="lhsub">🤖 Sources : fongbebenin.com · beninlangues.com</div>
+        </div>
+      </div>
+      <div class="lpbar"><div class="lpfill" id="lpf" style="width:37%"></div></div>
+
+      <div class="ltabs" id="ltabs">
+        <div class="ltab active" onclick="showTab(0,this)">👋 Saluer</div>
+        <div class="ltab" onclick="showTab(1,this)">💬 Vocabulaire</div>
+        <div class="ltab" onclick="showTab(2,this)">❓ Quiz IA</div>
+      </div>
+
+      <!-- TAB 0 -->
+      <div id="tab0">
+        <div class="acard">
+          <div class="afon">Nɛ a fɔn gbɔn ?</div>
+          <div class="aphon" style="font-size:13px;color:var(--violet-light);margin-bottom:6px;">Prononciation approchée : <strong style="color:var(--gold);">« Nè a fɔn gbon ? »</strong></div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:10px;">/nɛ a fɔn gbɔn/ · ton bas + neutre + haut + bas</div>
+          <button class="aplay" id="pb0" onclick="tplay('pb0')">📖 Voir prononciation</button>
+          <div class="atrad">Signification : <strong>"Êtes-vous bien réveillé(e) ?"</strong></div>
+          <div class="anote">🎵 Salutation matinale traditionnelle en Fongbé</div>
+        </div>
+        <div class="toncard">
+          <div class="tontitle">🎵 Système tonal de cette phrase</div>
+          <div class="tonrow">
+            <div class="tonbdg tb">Nɛ · ton bas</div>
+            <div class="tonbdg" style="background:rgba(255,255,255,0.15);color:white;">a · neutre</div>
+            <div class="tonbdg th">fɔn · ton haut</div>
+            <div class="tonbdg tb">gbɔn · ton bas</div>
+          </div>
+        </div>
+        <div class="minirow">
+          <div class="minicard">
+            <button class="mplay" onclick="tplay('mp1')">▶</button>
+            <div id="mp1"><div class="mfon">Ún fɔ́n gǎnjí !</div><div class="mtrad">Je vais très bien ! (réponse)</div><div style="font-size:10px;color:#F59E0B;margin-top:3px;">Pron. : « Oun fon ganyi »</div></div>
+          </div>
+          <div class="minicard">
+            <button class="mplay" onclick="tplay('mp2')" style="background:linear-gradient(135deg,#10B981,#059669);">▶🔊</button>
+            <div id="mp2"><div class="mfon">É dà bò !</div><div class="mtrad">Au revoir !</div><div style="font-size:10px;color:#10B981;margin-top:3px;">Pron. : « É da bò » ✅ Son actif</div></div>
+          </div>
+          <div class="minicard">
+            <button class="mplay" onclick="tplay('mp3')">▶</button>
+            <div id="mp3"><div class="mfon">Ún nɔ̀ ñí…</div><div class="mtrad">Je m'appelle… (suivi du prénom)</div><div style="font-size:10px;color:#F59E0B;margin-top:3px;">Pron. : « Oun no gni »</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 1 -->
+      <div id="tab1" style="display:none;">
+        <div class="acard">
+          <div class="afon">Àwànù !</div>
+          <div class="aphon">/à-wà-nù/ · tous tons bas</div>
+          <button class="aplay" id="pb1" onclick="tplay('pb1')">📖 Voir prononciation</button>
+          <div class="atrad">Traduction : <strong>"Merci / Merci beaucoup !"</strong></div>
+          <div style="font-size:12px;color:#F59E0B;margin-top:4px;">Prononciation : « a wà nou »</div>
+          <div class="anote">🎵 Correspond aussi à "kaka" (beaucoup)</div>
+        </div>
+        <div class="dictable">
+          <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Vocabulaire essentiel</div>
+          <div class="dicrow"><div class="dicfon">Àwànù</div><div class="dictr">Merci</div></div>
+          <div class="dicrow"><div class="dicfon">Ɛ̀ɛ́n</div><div class="dictr">Oui (nasale)</div></div>
+          <div class="dicrow"><div class="dicfon">Éwó</div><div class="dictr">Non</div></div>
+          <div class="dicrow"><div class="dicfon">Kɛnklɛn</div><div class="dictr">S'il vous plaît</div></div>
+          <div class="dicrow"><div class="dicfon">A-fon-a</div><div class="dictr">Bonjour (simple)</div></div>
+          <div class="dicrow"><div class="dicfon">É dà bò</div><div class="dictr">Au revoir</div></div>
+          <div class="dicrow"><div class="dicfon">Né à dè gbɔn ?</div><div class="dictr">Comment vas-tu ?</div></div>
+          <div class="dicrow"><div class="dicfon">Ún dò gǎnjí</div><div class="dictr">Je vais bien</div></div>
+        </div>
+      </div>
+
+      <!-- TAB 2 : Quiz -->
+      <div id="tab2" style="display:none;">
+        <div class="qcard">
+          <div class="qqst">Que signifie en français :<br><span style="color:var(--violet-light);font-family:Sora,sans-serif;font-size:18px;">"Nɛ a fɔn gbɔn ?"</span><br><span style="font-size:12px;color:var(--gold);">Prononciation : « Nè a fɔn gbon »</span></div>
+          <div class="qopts">
+            <div class="qopt" onclick="qa(this,false)"><div class="qltr">A</div> Merci beaucoup</div>
+            <div class="qopt" onclick="qa(this,false)"><div class="qltr">B</div> Comment tu t'appelles ?</div>
+            <div class="qopt" onclick="qa(this,true)"><div class="qltr">C</div> Êtes-vous bien réveillé(e) ?</div>
+            <div class="qopt" onclick="qa(this,false)"><div class="qltr">D</div> Au revoir !</div>
+          </div>
+        </div>
+        <button class="nxtbtn" id="nxtbtn" onclick="goTo('success')">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="screen" id="success">
+      <div class="sucemo">🎉</div>
+      <div class="suctitle">Àgbǎzán !</div>
+      <div class="sucfon">« Bravo ! » en Fongbé</div>
+      <div class="sucsub">Vous avez maîtrisé les salutations !<br>L'IA a préparé votre prochaine leçon.</div>
+      <div class="sucword">
+        <div class="sucwlbl">✨ Nouveau mot maîtrisé</div>
+        <div class="sucwfon">Nɛ a fɔn gbɔn ?</div>
+        <div class="sucwtrad">« Nè a fɔn gbon ? » · Êtes-vous bien réveillé(e) ? · Salutation Fongbé</div>
+      </div>
+      <div class="xpbdg">+50 XP gagnés 🌟</div>
+      <div class="sucstats">
+        <div class="sstat"><div class="snum2">100%</div><div class="slbl">Score</div></div>
+        <div class="sstat"><div class="snum2">4🔥</div><div class="slbl">Série</div></div>
+        <div class="sstat"><div class="snum2">3</div><div class="slbl">Leçons</div></div>
+      </div>
+      <button class="sucbtn" onclick="goTo('home')">🏠 Retour à l'accueil</button>
+    </div>
+
+  </div>
+</div>
+<div class="phone-label">📱 Prototype interactif · Éduc Fongbé IA · SAFEN 2026</div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bnav" id="bnav" style="display:none;">
+  <div class="nitem active" onclick="goTo('home');setNav(this)"><span class="nemo">🏠</span><span class="nlbl">Accueil</span></div>
+  <div class="nitem" onclick="goTo('lesson');setNav(this)"><span class="nemo">📚</span><span class="nlbl">Leçons</span></div>
+  <div class="nitem"><span class="nemo">📊</span><span class="nlbl">Progrès</span></div>
+  <div class="nitem"><span class="nemo">⚙️</span><span class="nlbl">Profil</span></div>
+</div>
+
+<script>
+let answered=false;
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const t=document.getElementById(id);
+  t.classList.add('active','slide-in');
+  setTimeout(()=>t.classList.remove('slide-in'),300);
+  document.getElementById('bnav').style.display=(id==='home'||id==='lesson')?'flex':'none';
+  if(id==='lesson'){
+    answered=false;
+    document.querySelectorAll('.qopt').forEach(o=>o.classList.remove('correct','wrong'));
+    document.getElementById('nxtbtn').style.display='none';
+    showTab(0,document.querySelectorAll('.ltab')[0]);
+  }
+  t.scrollTop=0;
+}
+function selectProfile(card,name){
+  document.querySelectorAll('.pcard').forEach(c=>c.classList.remove('sel'));
+  card.classList.add('sel');
+  document.getElementById('onbtn').style.opacity='1';
+  document.getElementById('onbtn').style.pointerEvents='auto';
+  document.getElementById('uname').textContent=name;
+}
+function setNav(item){
+  document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('active'));
+  item.classList.add('active');
+}
+function showTab(idx,tab){
+  document.querySelectorAll('.ltab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  ['tab0','tab1','tab2'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display=i===idx?'block':'none';
+  });
+}
+// ══════════════════════════════════════════════════════════════
+// PRONONCIATION FONGBÉ — Voix humaine réelle (accent Fon/Bénin)
+// Source : Google TTS via proxy public · fallback WebSpeech API
+// ══════════════════════════════════════════════════════════════
+
+// Dictionnaire Fongbé → phonétique latinisée pour TTS
+// Transcription phonétique adaptée pour rendu le plus proche
+// de l'accent Fon du Sud-Bénin (région d'Abomey-Cotonou)
+const FON_DICT = {
+  'pb0': { word: 'Nɛ a fɔn gbɔn ?',   ipa: 'nɛ a fɔn gbɔn',    tts_fr: 'Nè a fon gbon',      tts_en: 'neh ah fawn gbon',  desc: 'Êtes-vous bien réveillé ?' },
+  'pb1': { word: 'Àwànù',             ipa: 'à-wà-nù',           tts_fr: 'a wà nou',           tts_en: 'ah wah noo',        desc: 'Merci' },
+  'mp1': { word: 'Ún fɔ́n gǎnjí !',   ipa: 'ún fón gànjí',      tts_fr: 'oun fonne ganyi',    tts_en: 'oon fawn gahn-jee', desc: 'Je vais très bien !' },
+  'mp2': { word: 'É dà bò !',         ipa: 'é dà bò',           tts_fr: 'é da bo',            tts_en: 'ay dah boh',        desc: 'Au revoir !' },
+  'mp3': { word: 'Ún nɔ̀ ñí…',        ipa: 'ún nò ñí',          tts_fr: 'oun no gni',         tts_en: 'oon noh nyee',      desc: 'Je m\'appelle…' },
+};
+
+// Seul "É dà bò" (edabo) a le son activé — les autres affichent la prononciation
+const AUDIO_ENABLED = { 'mp2': true };  // uniquement edabo
+
+const playing    = {};
+const audioCache = {};
+
+// ── Fonction principale ──────────────────────────────────────
+function tplay(id) {
+  // Seul "É dà bò" (edabo = mp2) a le son activé
+  if (!AUDIO_ENABLED[id]) {
+    // Afficher la prononciation écrite dans un toast
+    const entry = FON_DICT[id];
+    if (!entry) return;
+    showPronToast(entry.word, entry.ipa, entry.desc);
+    playBip();
+    return;
+  }
+
+  // Si déjà en lecture → stopper
+  if (playing[id]) {
+    stopAudio(id); return;
+  }
+  const btn = document.getElementById(id);
+  if (!btn) return;
+
+  setPlaying(btn, id, true);
+  playBip();                       // son balafon d'intro
+
+  // Tenter la chaîne : gtts → WebSpeech FR → WebSpeech EN
+  setTimeout(() => {
+    tryGoogleTTS(id, btn)
+      .catch(() => tryWebSpeech(id, btn, 'fr'))
+      .catch(() => tryWebSpeech(id, btn, 'en'))
+      .catch(() => done(btn, id));
+  }, 280);
+}
+
+// Toast de prononciation pour les sons non-activés
+function showPronToast(word, ipa, desc) {
+  let old = document.getElementById('pron-toast');
+  if (old) old.remove();
+  const t = document.createElement('div');
+  t.id = 'pron-toast';
+  t.innerHTML = `<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-bottom:4px;">📖 Prononciation</div>
+    <div style="font-family:Sora,sans-serif;font-size:16px;font-weight:800;color:#F59E0B;">${word}</div>
+    <div style="font-size:12px;color:#A78BFA;margin-top:3px;">/${ipa}/</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px;">${desc}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;">🔊 Son disponible uniquement pour "É dà bò"</div>`;
+  t.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:#1E1B4B;border:1px solid rgba(124,58,237,0.5);border-radius:16px;padding:14px 20px;z-index:9999;text-align:center;min-width:240px;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:toastIn 0.3s ease;';
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity 0.4s'; setTimeout(()=>t.remove(),400); }, 3000);
+}
+
+// ── Google Translate TTS (voix humaine réelle, accent naturel) ─
+function tryGoogleTTS(id, btn) {
+  return new Promise((resolve, reject) => {
+    const entry = FON_DICT[id];
+    if (!entry) { reject(); return; }
+
+    // On essaie en français d'abord (meilleur rendu pour Fon)
+    const text = encodeURIComponent(entry.tts_fr);
+    const url  = `https://translate.google.com/translate_tts?ie=UTF-8&q=${text}&tl=fr&client=tw-ob`;
+
+    // Utiliser cache si disponible
+    if (audioCache[id]) {
+      playAudioObj(audioCache[id], btn, id, resolve, reject); return;
+    }
+
+    const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
+
+    audio.oncanplaythrough = () => {
+      audioCache[id] = audio;
+      playAudioObj(audio, btn, id, resolve, reject);
+    };
+    audio.onerror = () => {
+      // Google TTS bloqué (CORS) → fallback
+      reject();
+    };
+    // Timeout si ça répond pas
+    const timeout = setTimeout(() => { audio.src = ''; reject(); }, 3000);
+    audio.oncanplaythrough = () => {
+      clearTimeout(timeout);
+      audioCache[id] = audio;
+      playAudioObj(audio, btn, id, resolve, reject);
+    };
+    audio.src = url;
+    audio.load();
+  });
+}
+
+function playAudioObj(audio, btn, id, resolve, reject) {
+  audio.currentTime = 0;
+  audio.volume = 0.95;
+  audio.playbackRate = 0.88;   // légèrement ralenti = + naturel
+  audio.onended = () => { playDing(); setTimeout(() => done(btn, id), 200); resolve(); };
+  audio.onerror = () => { done(btn, id); reject(); };
+  const p = audio.play();
+  if (p) p.catch(reject);
+}
+
+// ── WebSpeech API — avec voix africaine/française optimisée ───
+function tryWebSpeech(id, btn, lang) {
+  return new Promise((resolve, reject) => {
+    if (!('speechSynthesis' in window)) { reject(); return; }
+    const entry = FON_DICT[id];
+    if (!entry) { reject(); return; }
+
+    window.speechSynthesis.cancel();
+    const text = lang === 'fr' ? entry.tts_fr : entry.tts_en;
+    const utt  = new SpeechSynthesisUtterance(text);
+
+    // Rechercher la meilleure voix disponible
+    const voices = window.speechSynthesis.getVoices();
+
+    // Priorité : voix africaines → voix françaises → tout
+    const voice =
+      voices.find(v => /yoruba|hausa|swahili|african/i.test(v.name)) ||
+      voices.find(v => v.lang === 'fr-FR' && /google|microsoft/i.test(v.name)) ||
+      voices.find(v => v.lang.startsWith('fr')) ||
+      (lang === 'en' ? voices.find(v => v.lang.startsWith('en')) : null) ||
+      voices[0];
+
+    if (voice) utt.voice = voice;
+    utt.lang   = lang === 'fr' ? 'fr-FR' : 'en-US';
+    utt.rate   = 0.72;     // lent = bien articulé
+    utt.pitch  = lang === 'fr' ? 0.95 : 1.0;
+    utt.volume = 1.0;
+
+    utt.onend   = () => { playDing(); setTimeout(() => { done(btn, id); resolve(); }, 200); };
+    utt.onerror = () => { done(btn, id); reject(); };
+
+    // Timeout de sécurité
+    const t = setTimeout(() => { window.speechSynthesis.cancel(); done(btn, id); resolve(); }, 5000);
+    utt.onend = () => { clearTimeout(t); playDing(); setTimeout(() => { done(btn, id); resolve(); }, 200); };
+
+    window.speechSynthesis.speak(utt);
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function setPlaying(btn, id, active) {
+  playing[id] = active;
+  btn.textContent = active ? '⏸' : '▶';
+  active ? btn.classList.add('playing') : btn.classList.remove('playing');
+}
+function done(btn, id)   { setPlaying(btn, id, false); }
+function stopAudio(id)   {
+  const btn = document.getElementById(id);
+  if (audioCache[id]) { audioCache[id].pause(); audioCache[id].currentTime = 0; }
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  if (btn) done(btn, id);
+}
+
+// Son balafon d'intro (clic naturel)
+function playBip() {
+  try {
+    const ctx = getCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+    const g = ctx.createGain();
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 1100; f.Q.value = 5;
+    g.connect(ctx.destination);
+    const o = ctx.createOscillator();
+    o.type = 'triangle'; o.frequency.value = 740;
+    o.frequency.linearRampToValueAtTime(720, ctx.currentTime + 0.1);
+    g.gain.setValueAtTime(0.13, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+    o.connect(f); f.connect(g);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.16);
+  } catch(e) {}
+}
+
+// Son ding de validation
+function playDing() {
+  try {
+    const ctx = getCtx();
+    [[0, 880, 0.09], [0.1, 1047, 0.07]].forEach(([t, f, v]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(v, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.22);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.25);
+    });
+  } catch(e) {}
+}
+
+// Pré-charger les voix
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+}
+
+function qa(opt, correct) {
+  if (answered) return;
+  answered = true;
+  document.querySelectorAll('.qopt').forEach(o => { if(o===opt) o.classList.add(correct?'correct':'wrong'); });
+  if (!correct) document.querySelectorAll('.qopt').forEach(o => { if(o.textContent.includes('réveillé')) o.classList.add('correct'); });
+  document.getElementById('nxtbtn').style.display = 'block';
+  playSuccessSound();
+}
+
+// ═══════════════════════════════════════════════
+// MUSIQUE AFRICAINE — Web Audio API
+// Balafon + percussions + ambiance douce
+// ═══════════════════════════════════════════════
+let audioCtx = null;
+let musicPlaying = false;
+let musicNodes = [];
+let masterGain = null;
+
+function getCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// Joue une note de balafon (lame métallique frappée)
+function balafonNote(ctx, freq, time, dur, vol=0.18){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filt = ctx.createBiquadFilter();
+  filt.type = 'bandpass';
+  filt.frequency.value = freq * 2;
+  filt.Q.value = 3;
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, time);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.98, time + dur);
+  gain.gain.setValueAtTime(0, time);
+  gain.gain.linearRampToValueAtTime(vol, time + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  osc.connect(filt);
+  filt.connect(gain);
+  gain.connect(masterGain);
+  osc.start(time);
+  osc.stop(time + dur + 0.05);
+  musicNodes.push(osc);
+}
+
+// Percussion (djembé simulé)
+function djembe(ctx, time, type='bass', vol=0.25){
+  const noise = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filt = ctx.createBiquadFilter();
+  if(type === 'bass'){
+    noise.frequency.setValueAtTime(180, time);
+    noise.frequency.exponentialRampToValueAtTime(60, time + 0.15);
+    filt.frequency.value = 200;
+    gain.gain.setValueAtTime(vol, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.22);
+  } else if(type === 'tone'){
+    noise.frequency.setValueAtTime(420, time);
+    noise.frequency.exponentialRampToValueAtTime(300, time + 0.08);
+    filt.frequency.value = 800;
+    gain.gain.setValueAtTime(vol*0.7, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+  } else {
+    noise.frequency.setValueAtTime(900, time);
+    noise.frequency.exponentialRampToValueAtTime(600, time + 0.05);
+    filt.frequency.value = 2000;
+    gain.gain.setValueAtTime(vol*0.4, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  }
+  noise.type = 'sine';
+  filt.type = 'bandpass';
+  filt.Q.value = 2;
+  noise.connect(filt);
+  filt.connect(gain);
+  gain.connect(masterGain);
+  noise.start(time);
+  noise.stop(time + 0.3);
+  musicNodes.push(noise);
+}
+
+// Mélodie pentatonique africaine (Sol majeur penta)
+// Do Ré Mi Sol La = 523 587 659 784 880
+const PENTA = [392, 440, 494, 587, 659, 784, 880, 988];
+
+// Séquence balafon joyeuse inspirée de la musique béninoise
+const MELODY = [
+  [0,   784, 0.35], [0.4, 659, 0.25], [0.7, 784, 0.2 ],
+  [1.0, 880, 0.35], [1.5, 784, 0.2 ], [1.8, 659, 0.25],
+  [2.2, 587, 0.35], [2.7, 659, 0.2 ], [3.0, 784, 0.3 ],
+  [3.5, 880, 0.4 ], [4.0, 988, 0.25], [4.4, 880, 0.2 ],
+  [4.7, 784, 0.35], [5.2, 659, 0.25], [5.6, 587, 0.2 ],
+  [6.0, 659, 0.35], [6.5, 784, 0.2 ], [6.8, 880, 0.25],
+  [7.2, 784, 0.4 ], [7.8, 659, 0.25], [8.0, 587, 0.35],
+];
+
+// Contrechant (voix basse balafon)
+const BASS_MEL = [
+  [0,   392, 0.4], [1.0, 440, 0.3], [2.0, 392, 0.4],
+  [3.0, 349, 0.3], [4.0, 392, 0.4], [5.0, 440, 0.3],
+  [6.0, 349, 0.4], [7.0, 392, 0.4],
+];
+
+// Rythme djembé béninois (pattern 8 temps)
+const DJEMBE_PAT = [
+  [0,   'bass'], [0.5, 'tone'], [1.0, 'bass'], [1.25,'slap'],
+  [1.5, 'tone'], [2.0, 'bass'], [2.5, 'slap'], [2.75,'tone'],
+  [3.0, 'bass'], [3.5, 'tone'], [3.75,'slap'], [4.0, 'bass'],
+];
+
+let loopTimer = null;
+const LOOP_DUR = 8.2; // secondes par boucle
+
+function scheduleLoop(startTime){
+  if(!musicPlaying) return;
+  const ctx = getCtx();
+
+  // Mélodie principale (balafon aigu)
+  MELODY.forEach(([beat, freq, dur]) => {
+    balafonNote(ctx, freq, startTime + beat, dur, 0.16);
+  });
+
+  // Contrechant (balafon grave)
+  BASS_MEL.forEach(([beat, freq, dur]) => {
+    balafonNote(ctx, freq, startTime + beat, dur, 0.12);
+  });
+
+  // Percussions djembé
+  for(let rep = 0; rep < 2; rep++){
+    const offset = rep * 4.0;
+    DJEMBE_PAT.forEach(([beat, type]) => {
+      djembe(ctx, startTime + beat + offset, type, 0.22);
+    });
+  }
+
+  // Programmer la prochaine boucle
+  loopTimer = setTimeout(() => scheduleLoop(ctx.currentTime + 0.05), (LOOP_DUR - 0.3) * 1000);
+}
+
+function startMusic(){
+  const ctx = getCtx();
+  if(ctx.state === 'suspended') ctx.resume();
+
+  masterGain = ctx.createGain();
+  // Reverb simple via delay
+  const delay = ctx.createDelay(0.5);
+  const delayGain = ctx.createGain();
+  delay.delayTime.value = 0.18;
+  delayGain.gain.value = 0.18;
+  masterGain.connect(delay);
+  delay.connect(delayGain);
+  delayGain.connect(masterGain);
+  masterGain.connect(ctx.destination);
+  masterGain.gain.setValueAtTime(0, ctx.currentTime);
+  masterGain.gain.linearRampToValueAtTime(1, ctx.currentTime + 1.5);
+
+  musicPlaying = true;
+  scheduleLoop(ctx.currentTime + 0.1);
+}
+
+function stopMusic(){
+  musicPlaying = false;
+  if(loopTimer) clearTimeout(loopTimer);
+  if(masterGain){
+    const ctx = getCtx();
+    masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.2);
+  }
+  musicNodes.forEach(n => { try{ n.stop(getCtx().currentTime + 1.5); }catch(e){} });
+  musicNodes = [];
+}
+
+function toggleMusic(){
+  if(musicPlaying){
+    stopMusic();
+    document.getElementById('music-icon').textContent = '🎵';
+    document.getElementById('music-label').textContent = 'Activer la musique';
+    document.getElementById('music-btn').style.background = 'rgba(255,255,255,0.08)';
+  } else {
+    startMusic();
+    document.getElementById('music-icon').textContent = '🔊';
+    document.getElementById('music-label').textContent = 'Musique active';
+    document.getElementById('music-btn').style.background = 'rgba(124,58,237,0.3)';
+    document.getElementById('music-btn').style.borderColor = 'rgba(124,58,237,0.6)';
+  }
+}
+
+// Son de succès (fanfare courte)
+function playSuccessSound(){
+  const ctx = getCtx();
+  if(ctx.state === 'suspended') ctx.resume();
+  const g = ctx.createGain();
+  g.connect(ctx.destination);
+  [[0, 659, 0.12],[0.12, 784, 0.12],[0.25, 988, 0.3]].forEach(([t,f,d]) => {
+    const o = ctx.createOscillator();
+    o.type = 'triangle';
+    o.frequency.value = f;
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0.18, ctx.currentTime + t);
+    og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + d);
+    o.connect(og); og.connect(g);
+    o.start(ctx.currentTime + t);
+    o.stop(ctx.currentTime + t + d + 0.05);
+  });
+}
+</script>
+</body>
+</html>
